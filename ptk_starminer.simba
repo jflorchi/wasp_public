@@ -1,4 +1,4 @@
-{$DEFINE SCRIPT_REVISION := '2'}
+{$DEFINE SCRIPT_REVISION := '3'}
 {$DEFINE SCRIPT_GUI}
 {$I SRL-T/osr.simba}
 {$I WaspLib/osr.simba}
@@ -199,8 +199,8 @@ begin
   Self.Skills := [ERSSkill.MINING, ERSSkill.TOTAL];
   Self.MinZoom := 0;
   Self.MaxZoom := 60;
-  Self.AddTask(4  * ONE_MINUTE, @Self.RandomClickTask, 0.33);
-  Self.AddTask(6  * ONE_MINUTE, @Self.RandomFocusTask, 0.33);
+  Self.AddTask(2  * ONE_MINUTE, @Self.RandomClickTask, 0.33);
+  Self.AddTask(5  * ONE_MINUTE, @Self.RandomFocusTask, 0.33);
   inherited;
 end;
 
@@ -256,11 +256,7 @@ begin
 end;
 
 function TMiner.TeleportItem(Item: TRSItem; Action: String = "Teleport"): Boolean;
-var
-  Pos: TPoint;
 begin
-  Pos := Self.RSW.GetMyPos();
-
   if not Inventory.IsOpen() then
     Inventory.Open();
   if Inventory.ContainsItem(Item) and Inventory.ClickItem(Item, Action) then
@@ -425,11 +421,9 @@ begin
     Enabled := EN_TAV_POH;
     ShortName := "Taverley POH";
 
-    NavFunc := @Self.NavViaItem;
-    TeleOptsOpen := @Self.ConTeleportVisible;
-    TeleItem := CON_CAPE;
-    TeleIntOpt := VK_3;
-    TeleStrOpt := STR_OPT_TELE;
+    NavFunc := @Self.NavViaSpell;
+    TeleStrOpt := "Outside"; // I think?
+    TeleSpell := ERSSpell.TELEPORT_TO_HOUSE;
     TeleArea := [6877, 2490, 7013, 2651];
   end;
 
@@ -760,6 +754,8 @@ begin
   SetHTTPHeader(HTTPClient, "Referer", "https://osrsportal.com/shooting-stars-tracker");
   Response := GetHTTPPage(HTTPClient, "https://osrsportal.com/activestars-foxtrot");
   FreeHTTPClient(HTTPClient);
+  if Response.Len <= 0 then
+    Exit();
 
   Data.Init(Response);
   SetLength(Result, Data.length());
@@ -1243,4 +1239,3 @@ begin
   {$ENDIF}
   Miner.Run(WLSettings.MaxActions, WLSettings.MaxTime);
 end.
-
